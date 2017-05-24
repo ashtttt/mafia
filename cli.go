@@ -61,10 +61,13 @@ func (c *CLI) processArgs() error {
 }
 
 func (c *CLI) printHelp() {
-	var usage = `Usage: mafia [command...]
-Commands:
-  token		Generates next OTP Token code
-  keys		Generates AWS keys by calling sts GetSessionToken 
+	var usage = `Mafia is a command line tool to automatically rotate AWS temporary access keys for MFA enabled users. 
+It generates MFA token and rotate AWS temporary keys before they expire.
+
+Usage: mafia [command...]
+commands:
+  token		Generates next MFA token code
+  keys		Generates new AWS session keys and updates credential file under [defaul] profile
 `
 	colorstring.Println("[red]" + usage)
 }

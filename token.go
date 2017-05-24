@@ -24,7 +24,7 @@ func (t *TokenCommand) Run(args []string) error {
 	flags.Usage = func() {
 		colorstring.Println("[red]" + t.commandHelp())
 	}
-	goOn := flags.Bool("force-continue", false, "")
+	goOn := flags.Bool("forever", false, "")
 	flags.Parse(args[1:])
 	args = flags.Args()
 
@@ -75,9 +75,9 @@ func (t *TokenCommand) Run(args []string) error {
 
 func (t *TokenCommand) commandHelp() string {
 
-	var usage = `Usage: mafia token
-Options:
-  -force-continue=false  Set to ture to contineously disply token every 30 sec, defualt is false
+	var usage = `Usage: mafia token -<option>
+options:
+  -forever=false  Set to ture to contineously disply token for every 30 sec, defualt is false
 `
 	return usage
 }

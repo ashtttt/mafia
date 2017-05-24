@@ -150,8 +150,8 @@ func (k *KeyCommand) updateCreds() error {
 
 func (k *KeyCommand) commandHelp() string {
 	var usage = `Usage: mafia keys
-Options:
-  -profile  AWS profile to use to generate temporary credentials.(Required)
+options:
+  -profile  AWS profile name which has user's static keys.(Required)
 `
 	return usage
 }
