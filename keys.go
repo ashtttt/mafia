@@ -23,11 +23,12 @@ import (
 )
 
 type KeyCommand struct {
-	serial string
-	creds  *sts.Credentials
+	serial  string
+	profile string
+	creds   *sts.Credentials
 }
 
-var message = "Credentials got updated. Valid for 12 hours, will be auto roated!"
+var message = "[default] profile has been updated with temporary AWS session keys"
 
 func (k *KeyCommand) Run(args []string) error {
 
@@ -43,11 +44,13 @@ func (k *KeyCommand) Run(args []string) error {
 	if len(*profile) <= 0 {
 		flags.Usage()
 		return errors.New("Profile name is required")
+	} else if *profile == "default" {
+		return errors.New("Can't use default profile, please use a different name for static keys")
 	}
 	if len(args) > 0 {
 		flags.Usage()
 	}
-	os.Setenv("AWS_PROFILE", *profile)
+	k.profile = *profile
 	err := k.getSerialNumber()
 	if err != nil {
 		return err
@@ -67,10 +70,9 @@ func (k *KeyCommand) Run(args []string) error {
 			if err != nil {
 				errCh <- err
 			}
-			colorstring.Printf("[green] %s \n", message)
+			colorstring.Printf("[green]%s \n", message)
 			time.Sleep(11 * time.Hour)
 		}
-
 	}()
 
 	for {
@@ -85,6 +87,7 @@ func (k *KeyCommand) Run(args []string) error {
 }
 
 func (k *KeyCommand) getSerialNumber() error {
+	os.Setenv("AWS_PROFILE", k.profile)
 	sess := session.Must(session.NewSession())
 	svc := sts.New(sess)
 	var params *sts.GetCallerIdentityInput
@@ -94,10 +97,12 @@ func (k *KeyCommand) getSerialNumber() error {
 		return err
 	}
 	k.serial = strings.Replace(*resp.Arn, "user", "mfa", 1)
+	os.Unsetenv("AWS_PROFILE")
 	return nil
 }
 
 func (k *KeyCommand) getSessionToken() error {
+	os.Setenv("AWS_PROFILE", k.profile)
 	sess := session.Must(session.NewSession())
 	svc := sts.New(sess)
 
@@ -119,6 +124,7 @@ func (k *KeyCommand) getSessionToken() error {
 		return err
 	}
 	k.creds = resp.Credentials
+	os.Unsetenv("AWS_PROFILE")
 	return nil
 }
 
@@ -138,11 +144,19 @@ func (k *KeyCommand) updateCreds() error {
 	}
 
 	config.DeleteSection("default")
-	config.NewSection("default")
-	config.Section("default").NewKey("aws_access_key_id", *k.creds.AccessKeyId)
-	config.Section("default").NewKey("aws_secret_access_key", *k.creds.SecretAccessKey)
-	config.Section("default").NewKey("aws_session_token", *k.creds.SessionToken)
-	config.SaveTo(filename)
+	section, err := config.NewSection("default")
+	if err != nil {
+		return err
+	}
+
+	section.NewKey("aws_access_key_id", *k.creds.AccessKeyId)
+	section.NewKey("aws_secret_access_key", *k.creds.SecretAccessKey)
+	section.NewKey("aws_session_token", *k.creds.SessionToken)
+
+	err = config.SaveTo(filename)
+	if err != nil {
+		return err
+	}
 
 	return nil
 

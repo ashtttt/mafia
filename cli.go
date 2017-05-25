@@ -9,6 +9,7 @@ import (
 type CLI struct {
 	Args     []string
 	Commands map[string]func() Command
+	needHelp bool
 }
 
 func NewCLI() *CLI {
@@ -29,6 +30,11 @@ func (c *CLI) Run() error {
 	err := c.processArgs()
 	if err != nil {
 		return err
+	}
+
+	if c.needHelp {
+		c.printHelp()
+		return nil
 	}
 	raw, ok := c.Commands[c.Args[0]]
 	if !ok {
@@ -53,7 +59,7 @@ func (c *CLI) processArgs() error {
 	}
 	for _, arg := range c.Args {
 		if arg == "-h" || arg == "--help" || arg == "-help" || arg == "--h" {
-			c.printHelp()
+			c.needHelp = true
 			break
 		}
 	}
