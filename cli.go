@@ -6,6 +6,10 @@ import (
 	"github.com/mitchellh/colorstring"
 )
 
+type Command interface {
+	Run([]string) error
+}
+
 type CLI struct {
 	Args     []string
 	Commands map[string]func() Command
@@ -20,6 +24,9 @@ func NewCLI() *CLI {
 			},
 			"keys": func() Command {
 				return &KeyCommand{}
+			},
+			"config": func() Command {
+				return &ConfigCommand{}
 			},
 		},
 	}

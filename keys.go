@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base32"
 	"errors"
 	"flag"
 	"os/signal"
@@ -14,7 +13,6 @@ import (
 
 	"time"
 
-	"github.com/ashtttt/mafia/topt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -106,13 +104,10 @@ func (k *KeyCommand) getSessionToken() error {
 	sess := session.Must(session.NewSession())
 	svc := sts.New(sess)
 
-	secret := os.Getenv("TOPT_SECRET")
-	if len(secret) <= 0 {
-		return errors.New("TOPT_SECRET environment variable is not set. Please do so")
+	code, err := getOpt(k.profile)
+	if err != nil {
+		return err
 	}
-	sec, _ := base32.StdEncoding.DecodeString(secret)
-	opt := topt.NewTOPT()
-	code := opt.TokenCode(sec)
 
 	params := &sts.GetSessionTokenInput{
 		SerialNumber: aws.String(k.serial),

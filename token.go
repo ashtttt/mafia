@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base32"
 	"flag"
 	"os/signal"
 	"syscall"
@@ -11,7 +10,6 @@ import (
 
 	"time"
 
-	"github.com/ashtttt/mafia/topt"
 	"github.com/mitchellh/colorstring"
 )
 
@@ -24,7 +22,9 @@ func (t *TokenCommand) Run(args []string) error {
 	flags.Usage = func() {
 		colorstring.Println("[red]" + t.commandHelp())
 	}
-	goOn := flags.Bool("forever", false, "")
+	fallow := flags.Bool("fallow", false, "")
+	profile := flags.String("profile", "", "")
+
 	flags.Parse(args[1:])
 	args = flags.Args()
 
@@ -32,15 +32,11 @@ func (t *TokenCommand) Run(args []string) error {
 		flags.Usage()
 	}
 
-	secret := os.Getenv("TOPT_SECRET")
-	if len(secret) <= 0 {
-		return errors.New("TOPT_SECRET environment variable is not set. Please do so")
-	}
-	sec, _ := base32.StdEncoding.DecodeString(secret)
-	opt := topt.NewTOPT()
-
-	if !*goOn {
-		code := opt.TokenCode(sec)
+	if !*fallow {
+		code, err := getOpt(*profile)
+		if err != nil {
+			return err
+		}
 		colorstring.Println("[green]" + code)
 
 	} else {
@@ -50,7 +46,7 @@ func (t *TokenCommand) Run(args []string) error {
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		go func() {
 			for {
-				code := opt.TokenCode(sec)
+				code, _ := getOpt(*profile)
 				c <- code
 				time.Sleep(30 * time.Second)
 			}
@@ -70,14 +66,14 @@ func (t *TokenCommand) Run(args []string) error {
 	}
 
 	return nil
-
 }
 
 func (t *TokenCommand) commandHelp() string {
 
 	var usage = `Usage: mafia token -<option>
 options:
-  -forever=false  Set to ture to contineously disply token for every 30 sec, defualt is false
+  -fallow=false  Set to ture to contineously disply token for every 30 sec, defualt is false
+  -profile=none  Configured profile name to find mfa device secret. Default set to none
 `
 	return usage
 }
