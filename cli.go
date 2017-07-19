@@ -81,6 +81,7 @@ Usage: mafia [command...]
 commands:
   token		Generates next MFA token code
   keys		Generates new AWS session keys and updates credential file under [defaul] profile
+  config    Configures a profile with MFA device secret key
 `
 	colorstring.Println("[red]" + usage)
 }

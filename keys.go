@@ -124,10 +124,7 @@ func (k *KeyCommand) getSessionToken() error {
 }
 
 func credfile() string {
-	homeDir := os.Getenv("HOME")
-	if homeDir == "" {
-		homeDir = os.Getenv("USERPROFILE")
-	}
+	homeDir := home()
 	return filepath.Join(homeDir, ".aws", "credentials")
 }
 
